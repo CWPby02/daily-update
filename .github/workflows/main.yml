@@ -14,14 +14,18 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+      # 1. GitHub repository checkout
       - name: Checkout repository
         uses: actions/checkout@v4
 
+      # 2. Install Flutter
       - name: Setup Flutter
         uses: subosito/flutter-action@v2
         with:
           channel: stable
 
+      # 3. Create missing Flutter/Android project files
+      #    Existing lib/ files remain available to the project.
       - name: Prepare Flutter project
         run: |
           flutter create \
@@ -30,24 +34,35 @@ jobs:
             --platforms android \
             .
 
+      # 4. Get Flutter packages
       - name: Get dependencies
         run: flutter pub get
 
-      - name: Analyze
+      # 5. Remove Flutter's default test
+      - name: Remove default Flutter test
+        run: |
+          rm -f test/widget_test.dart
+
+      # 6. Analyze our project
+      - name: Analyze project
         run: flutter analyze
 
+      # 7. Build Android APK
       - name: Build APK
         run: flutter build apk --release
 
+      # 8. Build Google Play Store AAB
       - name: Build AAB
         run: flutter build appbundle --release
 
+      # 9. Upload APK
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
           name: daily-update-apk
           path: build/app/outputs/flutter-apk/app-release.apk
 
+      # 10. Upload AAB
       - name: Upload AAB
         uses: actions/upload-artifact@v4
         with:
