@@ -22,20 +22,18 @@ jobs:
         with:
           channel: stable
 
-      - name: Check Flutter project
+      - name: Prepare Flutter project
         run: |
-          echo "Checking Flutter project..."
-          test -f pubspec.yaml
-          test -f lib/main.dart
-          test -f lib/app.dart
-          test -f lib/screens/home_screen.dart
-          test -f lib/theme/app_theme.dart
-          echo "All required files found."
+          flutter create \
+            --org com.dailyupdate \
+            --project-name daily_update \
+            --platforms android \
+            .
 
       - name: Get dependencies
         run: flutter pub get
 
-      - name: Analyze project
+      - name: Analyze
         run: flutter analyze
 
       - name: Build APK
