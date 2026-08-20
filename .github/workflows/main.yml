@@ -1,4 +1,4 @@
-name: Build Daily Update APK
+name: Build Daily Update
 
 on:
   workflow_dispatch:
@@ -7,7 +7,7 @@ on:
       - main
 
 permissions:
-  contents: write
+  contents: read
 
 jobs:
   build:
@@ -15,7 +15,7 @@ jobs:
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v6
+        uses: actions/checkout@v4
 
       - name: Setup Flutter
         uses: subosito/flutter-action@v2
@@ -24,14 +24,11 @@ jobs:
 
       - name: Create Flutter project
         run: |
-          if [ ! -f pubspec.yaml ]; then
-            flutter create --empty \
-              --org com.dailyupdate \
-              --project-name daily_update .
-          fi
-
-      - name: Check Flutter
-        run: flutter --version
+          flutter create \
+            --org com.dailyupdate \
+            --project-name daily_update \
+            --platforms android \
+            .
 
       - name: Get dependencies
         run: flutter pub get
@@ -39,8 +36,17 @@ jobs:
       - name: Build APK
         run: flutter build apk --release
 
+      - name: Build AAB
+        run: flutter build appbundle --release
+
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
           name: daily-update-apk
           path: build/app/outputs/flutter-apk/app-release.apk
+
+      - name: Upload AAB
+        uses: actions/upload-artifact@v4
+        with:
+          name: daily-update-aab
+          path: build/app/outputs/bundle/release/app-release.aab
