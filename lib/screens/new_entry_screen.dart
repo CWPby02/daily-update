@@ -16,7 +16,8 @@ class _NewEntryScreenState extends State<NewEntryScreen> {
   final _paidController = TextEditingController();
   final _udhaarController = TextEditingController();
 
-  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+  final FirebaseFirestore _firestore =
+      FirebaseFirestore.instance;
 
   String _selectedProduct = 'Aata';
 
@@ -35,6 +36,7 @@ class _NewEntryScreenState extends State<NewEntryScreen> {
   double get _totalAmount {
     final kg = double.tryParse(_kgController.text) ?? 0;
     final price = _prices[_selectedProduct] ?? 0;
+
     return kg * price;
   }
 
@@ -48,6 +50,7 @@ class _NewEntryScreenState extends State<NewEntryScreen> {
 
   double get _remainingAmount {
     final value = _totalAmount - _paidAmount;
+
     return value < 0 ? 0 : value;
   }
 
@@ -72,6 +75,7 @@ class _NewEntryScreenState extends State<NewEntryScreen> {
     _kgController.dispose();
     _paidController.dispose();
     _udhaarController.dispose();
+
     super.dispose();
   }
 
@@ -83,14 +87,20 @@ class _NewEntryScreenState extends State<NewEntryScreen> {
       lastDate: DateTime(2100),
     );
 
-    if (date == null || !mounted) return;
+    if (date == null || !mounted) {
+      return;
+    }
 
     final time = await showTimePicker(
       context: context,
-      initialTime: TimeOfDay.fromDateTime(_selectedDateTime),
+      initialTime: TimeOfDay.fromDateTime(
+        _selectedDateTime,
+      ),
     );
 
-    if (time == null || !mounted) return;
+    if (time == null || !mounted) {
+      return;
+    }
 
     setState(() {
       _selectedDateTime = DateTime(
@@ -118,36 +128,71 @@ class _NewEntryScreenState extends State<NewEntryScreen> {
       return;
     }
 
-    if (_isSaving) return;
+    if (_isSaving) {
+      return;
+    }
 
     setState(() {
       _isSaving = true;
     });
 
     try {
-      final kg = double.parse(_kgController.text.trim());
-      final pricePerKg = _prices[_selectedProduct]!;
-      final totalAmount = kg * pricePerKg;
-      final paidAmount = _paymentReceived ? _paidAmount : 0.0;
-      final udhaarAmount = _udhaarTaken ? _udhaarAmount : 0.0;
+      final kg = double.parse(
+        _kgController.text.trim(),
+      );
 
-      await _firestore.collection('mill_entries').add({
-        'customerName': _customerController.text.trim(),
+      final pricePerKg =
+          _prices[_selectedProduct]!;
+
+      final totalAmount = kg * pricePerKg;
+
+      final paidAmount =
+          _paymentReceived ? _paidAmount : 0.0;
+
+      final udhaarAmount =
+          _udhaarTaken ? _udhaarAmount : 0.0;
+
+      await _firestore
+          .collection('mill_entries')
+          .add({
+        'customerName':
+            _customerController.text.trim(),
+
         'product': _selectedProduct,
+
         'quantityKg': kg,
+
         'pricePerKg': pricePerKg,
+
         'totalAmount': totalAmount,
-        'paymentReceived': _paymentReceived,
+
+        'paymentReceived':
+            _paymentReceived,
+
         'paidAmount': paidAmount,
-        'udhaarTaken': _udhaarTaken,
-        'udhaarAmount': udhaarAmount,
-        'entryDateTime': Timestamp.fromDate(_selectedDateTime),
-        'createdAt': FieldValue.serverTimestamp(),
+
+        'udhaarTaken':
+            _udhaarTaken,
+
+        'udhaarAmount':
+            udhaarAmount,
+
+        'entryDateTime':
+            Timestamp.fromDate(
+          _selectedDateTime,
+        ),
+
+        'createdAt':
+            FieldValue.serverTimestamp(),
       });
 
-      if (!mounted) return;
+      if (!mounted) {
+        return;
+      }
 
-      _showMessage('Entry Firebase mein save ho gayi ✅');
+      _showMessage(
+        'Entry Firebase mein save ho gayi ✅',
+      );
 
       _customerController.clear();
       _kgController.clear();
@@ -156,18 +201,26 @@ class _NewEntryScreenState extends State<NewEntryScreen> {
 
       setState(() {
         _selectedProduct = 'Aata';
+
         _paymentReceived = false;
+
         _udhaarTaken = false;
-        _selectedDateTime = DateTime.now();
+
+        _selectedDateTime =
+            DateTime.now();
       });
     } on FirebaseException catch (e) {
-      if (!mounted) return;
+      if (!mounted) {
+        return;
+      }
 
       _showMessage(
         'Firebase error: ${e.message ?? e.code}',
       );
     } catch (e) {
-      if (!mounted) return;
+      if (!mounted) {
+        return;
+      }
 
       _showMessage(
         'Entry save nahi hui. Dobara try karo.',
@@ -185,14 +238,25 @@ class _NewEntryScreenState extends State<NewEntryScreen> {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(message),
-        behavior: SnackBarBehavior.floating,
+        behavior:
+            SnackBarBehavior.floating,
       ),
     );
   }
 
-  String _formatDateTime(DateTime dateTime) {
-    final day = dateTime.day.toString().padLeft(2, '0');
-    final month = dateTime.month.toString().padLeft(2, '0');
+  String _formatDateTime(
+    DateTime dateTime,
+  ) {
+    final day =
+        dateTime.day
+            .toString()
+            .padLeft(2, '0');
+
+    final month =
+        dateTime.month
+            .toString()
+            .padLeft(2, '0');
+
     final year = dateTime.year;
 
     final hour = dateTime.hour == 0
@@ -201,31 +265,47 @@ class _NewEntryScreenState extends State<NewEntryScreen> {
             ? dateTime.hour - 12
             : dateTime.hour;
 
-    final minute = dateTime.minute.toString().padLeft(2, '0');
-    final period = dateTime.hour >= 12 ? 'PM' : 'AM';
+    final minute =
+        dateTime.minute
+            .toString()
+            .padLeft(2, '0');
 
-    return '$day/$month/$year • $hour:$minute $period';
+    final period =
+        dateTime.hour >= 12
+            ? 'PM'
+            : 'AM';
+
+    return '$day/$month/$year • '
+        '$hour:$minute $period';
   }
 
   @override
   Widget build(BuildContext context) {
     final total = _totalAmount;
-    final paid = _paymentReceived ? _paidAmount : 0;
-    final remaining = _remainingAmount;
+
+    final remaining =
+        _remainingAmount;
 
     return Scaffold(
       appBar: AppBar(
         title: const Text(
           'New Mill Entry',
           style: TextStyle(
-            fontWeight: FontWeight.w700,
+            fontWeight:
+                FontWeight.w700,
           ),
         ),
       ),
       body: Form(
         key: _formKey,
         child: ListView(
-          padding: const EdgeInsets.fromLTRB(16, 8, 16, 32),
+          padding:
+              const EdgeInsets.fromLTRB(
+            16,
+            8,
+            16,
+            32,
+          ),
           children: [
             _sectionTitle(
               'Customer Details',
@@ -235,14 +315,19 @@ class _NewEntryScreenState extends State<NewEntryScreen> {
             const SizedBox(height: 12),
 
             _textField(
-              controller: _customerController,
+              controller:
+                  _customerController,
               label: 'Grahak Name',
-              hint: 'Example: Ramesh Kumar',
-              icon: Icons.person_outline_rounded,
+              hint:
+                  'Example: Ramesh Kumar',
+              icon:
+                  Icons.person_outline_rounded,
               validator: (value) {
-                if (value == null || value.trim().isEmpty) {
+                if (value == null ||
+                    value.trim().isEmpty) {
                   return 'Grahak ka naam enter karo';
                 }
+
                 return null;
               },
             ),
@@ -257,31 +342,48 @@ class _NewEntryScreenState extends State<NewEntryScreen> {
             const SizedBox(height: 12),
 
             DropdownButtonFormField<String>(
-              initialValue: _selectedProduct,
-              decoration: InputDecoration(
+              initialValue:
+                  _selectedProduct,
+              decoration:
+                  InputDecoration(
                 labelText: 'Product',
-                prefixIcon: const Icon(
+                prefixIcon:
+                    const Icon(
                   Icons.category_outlined,
                 ),
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(16),
+                border:
+                    OutlineInputBorder(
+                  borderRadius:
+                      BorderRadius.circular(
+                    16,
+                  ),
                 ),
               ),
-              items: _prices.keys.map((product) {
-                final price = _prices[product]!;
+              items:
+                  _prices.keys
+                      .map(
+                (product) {
+                  final price =
+                      _prices[product]!;
 
-                return DropdownMenuItem<String>(
-                  value: product,
-                  child: Text(
-                    '$product • ₹${price.toStringAsFixed(1)}/KG',
-                  ),
-                );
-              }).toList(),
+                  return DropdownMenuItem<
+                      String>(
+                    value: product,
+                    child: Text(
+                      '$product • '
+                      '₹${price.toStringAsFixed(1)}/KG',
+                    ),
+                  );
+                },
+              ).toList(),
               onChanged: (value) {
-                if (value == null) return;
+                if (value == null) {
+                  return;
+                }
 
                 setState(() {
-                  _selectedProduct = value;
+                  _selectedProduct =
+                      value;
                 });
               },
             ),
@@ -289,17 +391,27 @@ class _NewEntryScreenState extends State<NewEntryScreen> {
             const SizedBox(height: 14),
 
             _textField(
-              controller: _kgController,
-              label: 'Quantity (KG)',
-              hint: 'Example: 25',
-              icon: Icons.scale_outlined,
-              keyboardType: const TextInputType.numberWithOptions(
+              controller:
+                  _kgController,
+              label:
+                  'Quantity (KG)',
+              hint:
+                  'Example: 25',
+              icon:
+                  Icons.scale_outlined,
+              keyboardType:
+                  const TextInputType
+                      .numberWithOptions(
                 decimal: true,
               ),
               validator: (value) {
-                final kg = double.tryParse(value ?? '');
+                final kg =
+                    double.tryParse(
+                  value ?? '',
+                );
 
-                if (kg == null || kg <= 0) {
+                if (kg == null ||
+                    kg <= 0) {
                   return 'Valid KG enter karo';
                 }
 
@@ -310,10 +422,12 @@ class _NewEntryScreenState extends State<NewEntryScreen> {
             const SizedBox(height: 18),
 
             _amountCard(
-              title: 'Total Amount',
+              title:
+                  'Total Amount',
               amount: total,
               subtitle:
-                  '${_kgController.text.isEmpty ? '0' : _kgController.text} KG × ₹${_prices[_selectedProduct]!.toStringAsFixed(1)}',
+                  '${_kgController.text.isEmpty ? '0' : _kgController.text} KG × '
+                  '₹${_prices[_selectedProduct]!.toStringAsFixed(1)}',
             ),
 
             const SizedBox(height: 24),
@@ -326,32 +440,44 @@ class _NewEntryScreenState extends State<NewEntryScreen> {
             const SizedBox(height: 10),
 
             SwitchListTile(
-              contentPadding: EdgeInsets.zero,
+              contentPadding:
+                  EdgeInsets.zero,
               title: const Text(
                 'Payment Received',
                 style: TextStyle(
-                  fontWeight: FontWeight.w600,
+                  fontWeight:
+                      FontWeight.w600,
                 ),
               ),
-              subtitle: const Text(
+              subtitle:
+                  const Text(
                 'Customer ne payment diya hai',
               ),
-              value: _paymentReceived,
+              value:
+                  _paymentReceived,
               onChanged: (value) {
                 setState(() {
-                  _paymentReceived = value;
+                  _paymentReceived =
+                      value;
                 });
               },
             ),
 
             if (_paymentReceived) ...[
               const SizedBox(height: 8),
+
               _textField(
-                controller: _paidController,
-                label: 'Kitna Rupees Diya',
-                hint: 'Example: 100',
-                icon: Icons.currency_rupee_rounded,
-                keyboardType: const TextInputType.numberWithOptions(
+                controller:
+                    _paidController,
+                label:
+                    'Kitna Rupees Diya',
+                hint:
+                    'Example: 100',
+                icon:
+                    Icons.currency_rupee_rounded,
+                keyboardType:
+                    const TextInputType
+                        .numberWithOptions(
                   decimal: true,
                 ),
               ),
@@ -360,32 +486,45 @@ class _NewEntryScreenState extends State<NewEntryScreen> {
             const SizedBox(height: 12),
 
             SwitchListTile(
-              contentPadding: EdgeInsets.zero,
+              contentPadding:
+                  EdgeInsets.zero,
               title: const Text(
                 'Udhaar',
                 style: TextStyle(
-                  fontWeight: FontWeight.w600,
+                  fontWeight:
+                      FontWeight.w600,
                 ),
               ),
-              subtitle: const Text(
+              subtitle:
+                  const Text(
                 'Customer ne udhaar liya hai',
               ),
-              value: _udhaarTaken,
+              value:
+                  _udhaarTaken,
               onChanged: (value) {
                 setState(() {
-                  _udhaarTaken = value;
+                  _udhaarTaken =
+                      value;
                 });
               },
             ),
 
             if (_udhaarTaken) ...[
               const SizedBox(height: 8),
+
               _textField(
-                controller: _udhaarController,
-                label: 'Udhaar Amount',
-                hint: 'Example: 50',
-                icon: Icons.account_balance_wallet_outlined,
-                keyboardType: const TextInputType.numberWithOptions(
+                controller:
+                    _udhaarController,
+                label:
+                    'Udhaar Amount',
+                hint:
+                    'Example: 50',
+                icon:
+                    Icons
+                        .account_balance_wallet_outlined,
+                keyboardType:
+                    const TextInputType
+                        .numberWithOptions(
                   decimal: true,
                 ),
               ),
@@ -395,9 +534,12 @@ class _NewEntryScreenState extends State<NewEntryScreen> {
 
             if (total > 0)
               _amountCard(
-                title: 'Remaining',
-                amount: remaining,
-                subtitle: 'Total amount - Paid amount',
+                title:
+                    'Remaining',
+                amount:
+                    remaining,
+                subtitle:
+                    'Total amount - Paid amount',
               ),
 
             const SizedBox(height: 24),
@@ -410,49 +552,83 @@ class _NewEntryScreenState extends State<NewEntryScreen> {
             const SizedBox(height: 12),
 
             InkWell(
-              borderRadius: BorderRadius.circular(16),
-              onTap: _selectDateTime,
+              borderRadius:
+                  BorderRadius.circular(
+                16,
+              ),
+              onTap:
+                  _selectDateTime,
               child: Container(
-                padding: const EdgeInsets.all(17),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(16),
-                  border: Border.all(
-                    color: const Color(0xFFE1E5E9),
+                padding:
+                    const EdgeInsets.all(
+                  17,
+                ),
+                decoration:
+                    BoxDecoration(
+                  color:
+                      Colors.white,
+                  borderRadius:
+                      BorderRadius.circular(
+                    16,
+                  ),
+                  border:
+                      Border.all(
+                    color:
+                        const Color(
+                      0xFFE1E5E9,
+                    ),
                   ),
                 ),
                 child: Row(
                   children: [
                     const Icon(
-                      Icons.calendar_month_outlined,
+                      Icons
+                          .calendar_month_outlined,
                     ),
-                    const SizedBox(width: 12),
+
+                    const SizedBox(
+                      width: 12,
+                    ),
+
                     Expanded(
-                      child: Column(
+                      child:
+                          Column(
                         crossAxisAlignment:
-                            CrossAxisAlignment.start,
+                            CrossAxisAlignment
+                                .start,
                         children: [
                           const Text(
                             'Entry Date & Time',
-                            style: TextStyle(
-                              fontSize: 12,
-                              color: Colors.grey,
+                            style:
+                                TextStyle(
+                              fontSize:
+                                  12,
+                              color:
+                                  Colors.grey,
                             ),
                           ),
-                          const SizedBox(height: 4),
+
+                          const SizedBox(
+                            height: 4,
+                          ),
+
                           Text(
                             _formatDateTime(
                               _selectedDateTime,
                             ),
-                            style: const TextStyle(
-                              fontWeight: FontWeight.w600,
+                            style:
+                                const TextStyle(
+                              fontWeight:
+                                  FontWeight.w600,
                             ),
                           ),
                         ],
                       ),
                     ),
+
                     const Icon(
-                      Icons.edit_calendar_outlined,
+                      Icons
+                          .edit_calendar_outlined,
                     ),
                   ],
                 ),
@@ -463,29 +639,45 @@ class _NewEntryScreenState extends State<NewEntryScreen> {
 
             SizedBox(
               height: 56,
-              child: ElevatedButton.icon(
-                onPressed: _isSaving ? null : _saveEntry,
+              child:
+                  ElevatedButton.icon(
+                onPressed:
+                    _isSaving
+                        ? null
+                        : _saveEntry,
                 icon: _isSaving
                     ? const SizedBox(
                         width: 20,
                         height: 20,
-                        child: CircularProgressIndicator(
-                          strokeWidth: 2,
+                        child:
+                            CircularProgressIndicator(
+                          strokeWidth:
+                              2,
                         ),
                       )
                     : const Icon(
-                        Icons.cloud_upload_outlined,
+                        Icons
+                            .cloud_upload_outlined,
                       ),
                 label: Text(
-                  _isSaving ? 'Saving...' : 'Save Entry',
-                  style: const TextStyle(
+                  _isSaving
+                      ? 'Saving...'
+                      : 'Save Entry',
+                  style:
+                      const TextStyle(
                     fontSize: 16,
-                    fontWeight: FontWeight.w700,
+                    fontWeight:
+                        FontWeight.w700,
                   ),
                 ),
-                style: ElevatedButton.styleFrom(
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(16),
+                style:
+                    ElevatedButton.styleFrom(
+                  shape:
+                      RoundedRectangleBorder(
+                    borderRadius:
+                        BorderRadius.circular(
+                      16,
+                    ),
                   ),
                 ),
               ),
@@ -501,19 +693,25 @@ class _NewEntryScreenState extends State<NewEntryScreen> {
     String subtitle,
   ) {
     return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
+      crossAxisAlignment:
+          CrossAxisAlignment.start,
       children: [
         Text(
           title,
-          style: const TextStyle(
+          style:
+              const TextStyle(
             fontSize: 19,
-            fontWeight: FontWeight.w800,
+            fontWeight:
+                FontWeight.w800,
           ),
         ),
+
         const SizedBox(height: 3),
+
         Text(
           subtitle,
-          style: const TextStyle(
+          style:
+              const TextStyle(
             color: Colors.grey,
             fontSize: 13,
           ),
@@ -523,23 +721,31 @@ class _NewEntryScreenState extends State<NewEntryScreen> {
   }
 
   Widget _textField({
-    required TextEditingController controller,
+    required TextEditingController
+        controller,
     required String label,
     required String hint,
     required IconData icon,
     TextInputType? keyboardType,
-    String? Function(String?)? validator,
+    String? Function(String?)?
+        validator,
   }) {
     return TextFormField(
       controller: controller,
       keyboardType: keyboardType,
       validator: validator,
-      decoration: InputDecoration(
+      decoration:
+          InputDecoration(
         labelText: label,
         hintText: hint,
-        prefixIcon: Icon(icon),
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(16),
+        prefixIcon:
+            Icon(icon),
+        border:
+            OutlineInputBorder(
+          borderRadius:
+              BorderRadius.circular(
+            16,
+          ),
         ),
       ),
     );
@@ -551,12 +757,20 @@ class _NewEntryScreenState extends State<NewEntryScreen> {
     required String subtitle,
   }) {
     return Container(
-      padding: const EdgeInsets.all(18),
-      decoration: BoxDecoration(
-        color: const Color(0xFFEFF8F4),
-        borderRadius: BorderRadius.circular(18),
-        border: Border.all(
-          color: const Color(0xFFD2EADF),
+      padding:
+          const EdgeInsets.all(18),
+      decoration:
+          BoxDecoration(
+        color:
+            const Color(0xFFEFF8F4),
+        borderRadius:
+            BorderRadius.circular(
+          18,
+        ),
+        border:
+            Border.all(
+          color:
+              const Color(0xFFD2EADF),
         ),
       ),
       child: Row(
@@ -564,35 +778,51 @@ class _NewEntryScreenState extends State<NewEntryScreen> {
           const CircleAvatar(
             radius: 24,
             child: Icon(
-              Icons.currency_rupee_rounded,
+              Icons
+                  .currency_rupee_rounded,
             ),
           ),
+
           const SizedBox(width: 14),
+
           Expanded(
-            child: Column(
+            child:
+                Column(
               crossAxisAlignment:
-                  CrossAxisAlignment.start,
+                  CrossAxisAlignment
+                      .start,
               children: [
                 Text(
                   title,
-                  style: const TextStyle(
+                  style:
+                      const TextStyle(
                     fontSize: 13,
-                    color: Colors.grey,
+                    color:
+                        Colors.grey,
                   ),
                 ),
-                const SizedBox(height: 3),
+
+                const SizedBox(
+                  height: 3,
+                ),
+
                 Text(
                   '₹${amount.toStringAsFixed(2)}',
-                  style: const TextStyle(
+                  style:
+                      const TextStyle(
                     fontSize: 23,
-                    fontWeight: FontWeight.w800,
+                    fontWeight:
+                        FontWeight.w800,
                   ),
                 ),
+
                 Text(
                   subtitle,
-                  style: const TextStyle(
+                  style:
+                      const TextStyle(
                     fontSize: 11,
-                    color: Colors.grey,
+                    color:
+                        Colors.grey,
                   ),
                 ),
               ],
