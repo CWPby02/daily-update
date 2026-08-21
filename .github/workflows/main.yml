@@ -33,11 +33,45 @@ jobs:
       - name: Verify Firebase configuration
         run: |
           if [ ! -f "android/app/google-services.json" ]; then
-            echo "ERROR: google-services.json not found in android/app/"
+            echo "ERROR: google-services.json not found"
             exit 1
           fi
 
           echo "Firebase configuration found."
+
+      - name: Configure Google Services plugin
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+
+          settings = Path("android/settings.gradle.kts")
+
+          if settings.exists():
+              text = settings.read_text()
+
+              if "com.google.gms.google-services" not in text:
+                  text = text.replace(
+                      "plugins {",
+                      "plugins {\n    id(\"com.google.gms.google-services\") version \"4.4.4\" apply false",
+                      1
+                  )
+
+                  settings.write_text(text)
+
+          build_gradle = Path("android/app/build.gradle.kts")
+
+          if build_gradle.exists():
+              text = build_gradle.read_text()
+
+              if "com.google.gms.google-services" not in text:
+                  text = text.replace(
+                      "plugins {",
+                      "plugins {\n    id(\"com.google.gms.google-services\")",
+                      1
+                  )
+
+                  build_gradle.write_text(text)
+          PY
 
       - name: Get dependencies
         run: flutter pub get
