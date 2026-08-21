@@ -1,3 +1,4 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 
 class NewEntryScreen extends StatefulWidget {
@@ -10,22 +11,18 @@ class NewEntryScreen extends StatefulWidget {
 class _NewEntryScreenState extends State<NewEntryScreen> {
   final _formKey = GlobalKey<FormState>();
 
-  final TextEditingController _customerController =
-      TextEditingController();
+  final _customerController = TextEditingController();
+  final _kgController = TextEditingController();
+  final _paidController = TextEditingController();
+  final _udhaarController = TextEditingController();
 
-  final TextEditingController _kgController =
-      TextEditingController();
-
-  final TextEditingController _paidController =
-      TextEditingController();
-
-  final TextEditingController _udhaarController =
-      TextEditingController();
+  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
   String _selectedProduct = 'Aata';
 
   bool _paymentReceived = false;
   bool _udhaarTaken = false;
+  bool _isSaving = false;
 
   DateTime _selectedDateTime = DateTime.now();
 
@@ -38,7 +35,6 @@ class _NewEntryScreenState extends State<NewEntryScreen> {
   double get _totalAmount {
     final kg = double.tryParse(_kgController.text) ?? 0;
     final price = _prices[_selectedProduct] ?? 0;
-
     return kg * price;
   }
 
@@ -48,6 +44,11 @@ class _NewEntryScreenState extends State<NewEntryScreen> {
 
   double get _udhaarAmount {
     return double.tryParse(_udhaarController.text) ?? 0;
+  }
+
+  double get _remainingAmount {
+    final value = _totalAmount - _paidAmount;
+    return value < 0 ? 0 : value;
   }
 
   @override
@@ -60,7 +61,9 @@ class _NewEntryScreenState extends State<NewEntryScreen> {
   }
 
   void _refresh() {
-    setState(() {});
+    if (mounted) {
+      setState(() {});
+    }
   }
 
   @override
@@ -69,7 +72,6 @@ class _NewEntryScreenState extends State<NewEntryScreen> {
     _kgController.dispose();
     _paidController.dispose();
     _udhaarController.dispose();
-
     super.dispose();
   }
 
@@ -81,18 +83,14 @@ class _NewEntryScreenState extends State<NewEntryScreen> {
       lastDate: DateTime(2100),
     );
 
-    if (date == null || !mounted) {
-      return;
-    }
+    if (date == null || !mounted) return;
 
     final time = await showTimePicker(
       context: context,
       initialTime: TimeOfDay.fromDateTime(_selectedDateTime),
     );
 
-    if (time == null || !mounted) {
-      return;
-    }
+    if (time == null || !mounted) return;
 
     setState(() {
       _selectedDateTime = DateTime(
@@ -105,7 +103,7 @@ class _NewEntryScreenState extends State<NewEntryScreen> {
     });
   }
 
-  void _submitEntry() {
+  Future<void> _saveEntry() async {
     if (!_formKey.currentState!.validate()) {
       return;
     }
@@ -120,17 +118,67 @@ class _NewEntryScreenState extends State<NewEntryScreen> {
       return;
     }
 
-    final total = _totalAmount;
-    final paid = _paymentReceived ? _paidAmount : 0;
-    final udhaar = _udhaarTaken ? _udhaarAmount : 0;
+    if (_isSaving) return;
 
-    final remaining = total - paid;
+    setState(() {
+      _isSaving = true;
+    });
 
-    _showMessage(
-      'Entry ready • Total ₹${total.toStringAsFixed(2)}'
-      ' • Remaining ₹${remaining.toStringAsFixed(2)}'
-      ' • Udhaar ₹${udhaar.toStringAsFixed(2)}',
-    );
+    try {
+      final kg = double.parse(_kgController.text.trim());
+      final pricePerKg = _prices[_selectedProduct]!;
+      final totalAmount = kg * pricePerKg;
+      final paidAmount = _paymentReceived ? _paidAmount : 0.0;
+      final udhaarAmount = _udhaarTaken ? _udhaarAmount : 0.0;
+
+      await _firestore.collection('mill_entries').add({
+        'customerName': _customerController.text.trim(),
+        'product': _selectedProduct,
+        'quantityKg': kg,
+        'pricePerKg': pricePerKg,
+        'totalAmount': totalAmount,
+        'paymentReceived': _paymentReceived,
+        'paidAmount': paidAmount,
+        'udhaarTaken': _udhaarTaken,
+        'udhaarAmount': udhaarAmount,
+        'entryDateTime': Timestamp.fromDate(_selectedDateTime),
+        'createdAt': FieldValue.serverTimestamp(),
+      });
+
+      if (!mounted) return;
+
+      _showMessage('Entry Firebase mein save ho gayi ✅');
+
+      _customerController.clear();
+      _kgController.clear();
+      _paidController.clear();
+      _udhaarController.clear();
+
+      setState(() {
+        _selectedProduct = 'Aata';
+        _paymentReceived = false;
+        _udhaarTaken = false;
+        _selectedDateTime = DateTime.now();
+      });
+    } on FirebaseException catch (e) {
+      if (!mounted) return;
+
+      _showMessage(
+        'Firebase error: ${e.message ?? e.code}',
+      );
+    } catch (e) {
+      if (!mounted) return;
+
+      _showMessage(
+        'Entry save nahi hui. Dobara try karo.',
+      );
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isSaving = false;
+        });
+      }
+    }
   }
 
   void _showMessage(String message) {
@@ -163,7 +211,7 @@ class _NewEntryScreenState extends State<NewEntryScreen> {
   Widget build(BuildContext context) {
     final total = _totalAmount;
     final paid = _paymentReceived ? _paidAmount : 0;
-    final remaining = (total - paid).clamp(0, double.infinity);
+    final remaining = _remainingAmount;
 
     return Scaffold(
       appBar: AppBar(
@@ -195,7 +243,6 @@ class _NewEntryScreenState extends State<NewEntryScreen> {
                 if (value == null || value.trim().isEmpty) {
                   return 'Grahak ka naam enter karo';
                 }
-
                 return null;
               },
             ),
@@ -226,14 +273,12 @@ class _NewEntryScreenState extends State<NewEntryScreen> {
                 return DropdownMenuItem<String>(
                   value: product,
                   child: Text(
-                    '$product  •  ₹${price.toStringAsFixed(1)}/KG',
+                    '$product • ₹${price.toStringAsFixed(1)}/KG',
                   ),
                 );
               }).toList(),
               onChanged: (value) {
-                if (value == null) {
-                  return;
-                }
+                if (value == null) return;
 
                 setState(() {
                   _selectedProduct = value;
@@ -306,8 +351,7 @@ class _NewEntryScreenState extends State<NewEntryScreen> {
                 label: 'Kitna Rupees Diya',
                 hint: 'Example: 100',
                 icon: Icons.currency_rupee_rounded,
-                keyboardType:
-                    const TextInputType.numberWithOptions(
+                keyboardType: const TextInputType.numberWithOptions(
                   decimal: true,
                 ),
               ),
@@ -341,8 +385,7 @@ class _NewEntryScreenState extends State<NewEntryScreen> {
                 label: 'Udhaar Amount',
                 hint: 'Example: 50',
                 icon: Icons.account_balance_wallet_outlined,
-                keyboardType:
-                    const TextInputType.numberWithOptions(
+                keyboardType: const TextInputType.numberWithOptions(
                   decimal: true,
                 ),
               ),
@@ -353,7 +396,7 @@ class _NewEntryScreenState extends State<NewEntryScreen> {
             if (total > 0)
               _amountCard(
                 title: 'Remaining',
-                amount: remaining.toDouble(),
+                amount: remaining,
                 subtitle: 'Total amount - Paid amount',
               ),
 
@@ -421,13 +464,21 @@ class _NewEntryScreenState extends State<NewEntryScreen> {
             SizedBox(
               height: 56,
               child: ElevatedButton.icon(
-                onPressed: _submitEntry,
-                icon: const Icon(
-                  Icons.check_circle_outline,
-                ),
-                label: const Text(
-                  'Save Entry',
-                  style: TextStyle(
+                onPressed: _isSaving ? null : _saveEntry,
+                icon: _isSaving
+                    ? const SizedBox(
+                        width: 20,
+                        height: 20,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                        ),
+                      )
+                    : const Icon(
+                        Icons.cloud_upload_outlined,
+                      ),
+                label: Text(
+                  _isSaving ? 'Saving...' : 'Save Entry',
+                  style: const TextStyle(
                     fontSize: 16,
                     fontWeight: FontWeight.w700,
                   ),
