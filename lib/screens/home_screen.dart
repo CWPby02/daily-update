@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import 'new_entry_screen.dart';
+
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
 
@@ -27,12 +29,14 @@ class HomeScreen extends StatelessWidget {
           ],
         ),
       ),
+
       body: SafeArea(
         child: SingleChildScrollView(
           padding: const EdgeInsets.all(16),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              // Welcome Card
               Container(
                 width: double.infinity,
                 padding: const EdgeInsets.all(20),
@@ -80,21 +84,22 @@ class HomeScreen extends StatelessWidget {
 
               const SizedBox(height: 12),
 
+              // First row
               Row(
                 children: [
                   Expanded(
-                    child: _card(
-                      'Total KG',
-                      '0 KG',
-                      Icons.scale_rounded,
+                    child: _summaryCard(
+                      title: 'Total KG',
+                      value: '0 KG',
+                      icon: Icons.scale_rounded,
                     ),
                   ),
                   const SizedBox(width: 12),
                   Expanded(
-                    child: _card(
-                      'Sales',
-                      '₹0',
-                      Icons.currency_rupee_rounded,
+                    child: _summaryCard(
+                      title: 'Sales',
+                      value: '₹0',
+                      icon: Icons.currency_rupee_rounded,
                     ),
                   ),
                 ],
@@ -102,21 +107,22 @@ class HomeScreen extends StatelessWidget {
 
               const SizedBox(height: 12),
 
+              // Second row
               Row(
                 children: [
                   Expanded(
-                    child: _card(
-                      'Paid',
-                      '₹0',
-                      Icons.payments_rounded,
+                    child: _summaryCard(
+                      title: 'Paid',
+                      value: '₹0',
+                      icon: Icons.payments_rounded,
                     ),
                   ),
                   const SizedBox(width: 12),
                   Expanded(
-                    child: _card(
-                      'Udhaar',
-                      '₹0',
-                      Icons.account_balance_wallet_rounded,
+                    child: _summaryCard(
+                      title: 'Udhaar',
+                      value: '₹0',
+                      icon: Icons.account_balance_wallet_rounded,
                     ),
                   ),
                 ],
@@ -124,17 +130,34 @@ class HomeScreen extends StatelessWidget {
 
               const SizedBox(height: 24),
 
+              // New Entry Button
               SizedBox(
                 width: double.infinity,
-                height: 55,
+                height: 56,
                 child: ElevatedButton.icon(
-                  onPressed: () {},
-                  icon: const Icon(Icons.add_rounded),
+                  onPressed: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) =>
+                            const NewEntryScreen(),
+                      ),
+                    );
+                  },
+                  icon: const Icon(
+                    Icons.add_rounded,
+                  ),
                   label: const Text(
                     'New Mill Entry',
                     style: TextStyle(
                       fontSize: 16,
                       fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  style: ElevatedButton.styleFrom(
+                    shape: RoundedRectangleBorder(
+                      borderRadius:
+                          BorderRadius.circular(16),
                     ),
                   ),
                 ),
@@ -152,6 +175,7 @@ class HomeScreen extends StatelessWidget {
 
               const SizedBox(height: 12),
 
+              // Empty state
               Container(
                 width: double.infinity,
                 padding: const EdgeInsets.all(28),
@@ -159,7 +183,7 @@ class HomeScreen extends StatelessWidget {
                   color: Colors.white,
                   borderRadius: BorderRadius.circular(18),
                   border: Border.all(
-                    color: Color(0xFFE5E7EB),
+                    color: const Color(0xFFE5E7EB),
                   ),
                 ),
                 child: const Column(
@@ -194,25 +218,38 @@ class HomeScreen extends StatelessWidget {
         ),
       ),
 
+      // Bottom Navigation
       bottomNavigationBar: NavigationBar(
         selectedIndex: 0,
-        onDestinationSelected: (index) {},
+        onDestinationSelected: (index) {
+          // Navigation will be connected later.
+        },
         destinations: const [
           NavigationDestination(
-            icon: Icon(Icons.home_outlined),
-            selectedIcon: Icon(Icons.home_rounded),
+            icon: Icon(
+              Icons.home_outlined,
+            ),
+            selectedIcon: Icon(
+              Icons.home_rounded,
+            ),
             label: 'Home',
           ),
           NavigationDestination(
-            icon: Icon(Icons.receipt_long_outlined),
+            icon: Icon(
+              Icons.receipt_long_outlined,
+            ),
             label: 'Entries',
           ),
           NavigationDestination(
-            icon: Icon(Icons.payments_outlined),
+            icon: Icon(
+              Icons.payments_outlined,
+            ),
             label: 'Payment',
           ),
           NavigationDestination(
-            icon: Icon(Icons.bar_chart_outlined),
+            icon: Icon(
+              Icons.bar_chart_outlined,
+            ),
             label: 'Reports',
           ),
         ],
@@ -220,11 +257,11 @@ class HomeScreen extends StatelessWidget {
     );
   }
 
-  Widget _card(
-    String title,
-    String value,
-    IconData icon,
-  ) {
+  Widget _summaryCard({
+    required String title,
+    required String value,
+    required IconData icon,
+  }) {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
@@ -235,7 +272,8 @@ class HomeScreen extends StatelessWidget {
         ),
       ),
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+        crossAxisAlignment:
+            CrossAxisAlignment.start,
         children: [
           Icon(icon),
           const SizedBox(height: 12),
