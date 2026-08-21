@@ -81,14 +81,18 @@ class _NewEntryScreenState extends State<NewEntryScreen> {
       lastDate: DateTime(2100),
     );
 
-    if (date == null || !mounted) return;
+    if (date == null || !mounted) {
+      return;
+    }
 
     final time = await showTimePicker(
       context: context,
       initialTime: TimeOfDay.fromDateTime(_selectedDateTime),
     );
 
-    if (time == null || !mounted) return;
+    if (time == null || !mounted) {
+      return;
+    }
 
     setState(() {
       _selectedDateTime = DateTime(
@@ -170,7 +174,6 @@ class _NewEntryScreenState extends State<NewEntryScreen> {
           ),
         ),
       ),
-
       body: Form(
         key: _formKey,
         child: ListView(
@@ -192,6 +195,7 @@ class _NewEntryScreenState extends State<NewEntryScreen> {
                 if (value == null || value.trim().isEmpty) {
                   return 'Grahak ka naam enter karo';
                 }
+
                 return null;
               },
             ),
@@ -206,7 +210,7 @@ class _NewEntryScreenState extends State<NewEntryScreen> {
             const SizedBox(height: 12),
 
             DropdownButtonFormField<String>(
-              value: _selectedProduct,
+              initialValue: _selectedProduct,
               decoration: InputDecoration(
                 labelText: 'Product',
                 prefixIcon: const Icon(
@@ -219,7 +223,7 @@ class _NewEntryScreenState extends State<NewEntryScreen> {
               items: _prices.keys.map((product) {
                 final price = _prices[product]!;
 
-                return DropdownMenuItem(
+                return DropdownMenuItem<String>(
                   value: product,
                   child: Text(
                     '$product  •  ₹${price.toStringAsFixed(1)}/KG',
@@ -227,7 +231,9 @@ class _NewEntryScreenState extends State<NewEntryScreen> {
                 );
               }).toList(),
               onChanged: (value) {
-                if (value == null) return;
+                if (value == null) {
+                  return;
+                }
 
                 setState(() {
                   _selectedProduct = value;
@@ -416,7 +422,9 @@ class _NewEntryScreenState extends State<NewEntryScreen> {
               height: 56,
               child: ElevatedButton.icon(
                 onPressed: _submitEntry,
-                icon: const Icon(Icons.check_circle_outline),
+                icon: const Icon(
+                  Icons.check_circle_outline,
+                ),
                 label: const Text(
                   'Save Entry',
                   style: TextStyle(
@@ -511,7 +519,8 @@ class _NewEntryScreenState extends State<NewEntryScreen> {
           const SizedBox(width: 14),
           Expanded(
             child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+              crossAxisAlignment:
+                  CrossAxisAlignment.start,
               children: [
                 Text(
                   title,
