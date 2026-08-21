@@ -4,7 +4,7 @@ import 'package:flutter/material.dart';
 import 'edit_entry_screen.dart';
 
 class EntriesScreen extends StatelessWidget {
-  const EntriesScreen({super.key});
+  EntriesScreen({super.key});
 
   final FirebaseFirestore _firestore =
       FirebaseFirestore.instance;
@@ -78,13 +78,11 @@ class EntriesScreen extends StatelessWidget {
     Map<String, dynamic> data,
   ) {
     final customerName =
-        data['customerName']
-                ?.toString() ??
+        data['customerName']?.toString() ??
             'Unknown Customer';
 
     final product =
-        data['product']
-                ?.toString() ??
+        data['product']?.toString() ??
             'Unknown Product';
 
     final kg = _toDouble(
@@ -109,8 +107,7 @@ class EntriesScreen extends StatelessWidget {
     String dateText = '';
 
     if (timestamp is Timestamp) {
-      dateText =
-          _formatDateTime(
+      dateText = _formatDateTime(
         timestamp.toDate(),
       );
     }
@@ -127,8 +124,7 @@ class EntriesScreen extends StatelessWidget {
         borderRadius:
             BorderRadius.circular(18),
         border: Border.all(
-          color:
-              const Color(0xFFE5E7EB),
+          color: const Color(0xFFE5E7EB),
         ),
       ),
       child: Column(
@@ -138,48 +134,39 @@ class EntriesScreen extends StatelessWidget {
               Container(
                 width: 46,
                 height: 46,
-                decoration:
-                    BoxDecoration(
+                decoration: BoxDecoration(
                   color:
                       const Color(0xFFEAF5F0),
                   borderRadius:
-                      BorderRadius.circular(
-                    14,
-                  ),
+                      BorderRadius.circular(14),
                 ),
                 child: const Icon(
                   Icons.receipt_long_rounded,
-                  color:
-                      Color(0xFF176B52),
+                  color: Color(0xFF176B52),
                 ),
               ),
               const SizedBox(width: 12),
               Expanded(
                 child: Column(
                   crossAxisAlignment:
-                      CrossAxisAlignment
-                          .start,
+                      CrossAxisAlignment.start,
                   children: [
                     Text(
                       customerName,
                       maxLines: 1,
                       overflow:
                           TextOverflow.ellipsis,
-                      style:
-                          const TextStyle(
+                      style: const TextStyle(
                         fontSize: 16,
                         fontWeight:
                             FontWeight.bold,
                       ),
                     ),
-                    const SizedBox(
-                      height: 4,
-                    ),
+                    const SizedBox(height: 4),
                     Text(
                       '$product • '
                       '${_formatNumber(kg)} KG',
-                      style:
-                          const TextStyle(
+                      style: const TextStyle(
                         color: Colors.grey,
                         fontSize: 13,
                       ),
@@ -195,8 +182,7 @@ class EntriesScreen extends StatelessWidget {
                       MaterialPageRoute(
                         builder: (_) =>
                             EditEntryScreen(
-                          documentId:
-                              documentId,
+                          documentId: documentId,
                           entry: data,
                         ),
                       ),
@@ -228,8 +214,7 @@ class EntriesScreen extends StatelessWidget {
                     child: Row(
                       children: [
                         Icon(
-                          Icons
-                              .delete_outline,
+                          Icons.delete_outline,
                           color: Colors.red,
                         ),
                         SizedBox(width: 10),
@@ -274,8 +259,7 @@ class EntriesScreen extends StatelessWidget {
           if (dateText.isNotEmpty) ...[
             const SizedBox(height: 10),
             Align(
-              alignment:
-                  Alignment.centerLeft,
+              alignment: Alignment.centerLeft,
               child: Text(
                 dateText,
                 style: const TextStyle(
@@ -371,7 +355,8 @@ class EntriesScreen extends StatelessWidget {
           .showSnackBar(
         SnackBar(
           content: Text(
-            'Firebase error: ${e.message ?? e.code}',
+            'Firebase error: '
+            '${e.message ?? e.code}',
           ),
         ),
       );
@@ -454,7 +439,9 @@ class EntriesScreen extends StatelessWidget {
     );
   }
 
-  static double _toDouble(dynamic value) {
+  static double _toDouble(
+    dynamic value,
+  ) {
     if (value is num) {
       return value.toDouble();
     }
