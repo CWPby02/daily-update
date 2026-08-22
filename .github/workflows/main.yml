@@ -14,13 +14,25 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+      # =========================================================
+      # CHECKOUT
+      # =========================================================
+
       - name: Checkout repository
         uses: actions/checkout@v4
+
+      # =========================================================
+      # FLUTTER
+      # =========================================================
 
       - name: Setup Flutter
         uses: subosito/flutter-action@v2
         with:
           channel: stable
+
+      # =========================================================
+      # PREPARE FLUTTER PROJECT
+      # =========================================================
 
       - name: Prepare Flutter project
         run: |
@@ -30,6 +42,10 @@ jobs:
             --platforms android \
             .
 
+      # =========================================================
+      # VERIFY FIREBASE
+      # =========================================================
+
       - name: Verify Firebase configuration
         run: |
           if [ ! -f "android/app/google-services.json" ]; then
@@ -38,6 +54,10 @@ jobs:
           fi
 
           echo "Firebase configuration found."
+
+      # =========================================================
+      # CONFIGURE GOOGLE SERVICES
+      # =========================================================
 
       - name: Configure Google Services plugin
         run: |
@@ -73,27 +93,78 @@ jobs:
                   build_gradle.write_text(text)
           PY
 
+      # =========================================================
+      # VERIFY APP ICON
+      # =========================================================
+
+      - name: Verify app icon
+        run: |
+          if [ ! -f "assets/icon/app_icon.png" ]; then
+            echo "ERROR: assets/icon/app_icon.png not found"
+            echo "Make sure the icon file is uploaded to the repository."
+            exit 1
+          fi
+
+          echo "App icon found."
+          ls -lh assets/icon/app_icon.png
+
+      # =========================================================
+      # GET DEPENDENCIES
+      # =========================================================
+
       - name: Get dependencies
         run: flutter pub get
+
+      # =========================================================
+      # GENERATE APP ICON
+      # =========================================================
+
+      - name: Generate app icon
+        run: |
+          dart run flutter_launcher_icons
+
+      # =========================================================
+      # REMOVE DEFAULT TEST
+      # =========================================================
 
       - name: Remove default Flutter test
         run: |
           rm -f test/widget_test.dart
 
+      # =========================================================
+      # ANALYZE
+      # =========================================================
+
       - name: Analyze project
         run: flutter analyze
+
+      # =========================================================
+      # BUILD APK
+      # =========================================================
 
       - name: Build APK
         run: flutter build apk --release
 
+      # =========================================================
+      # BUILD AAB
+      # =========================================================
+
       - name: Build AAB
         run: flutter build appbundle --release
+
+      # =========================================================
+      # UPLOAD APK
+      # =========================================================
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
           name: daily-update-apk
           path: build/app/outputs/flutter-apk/app-release.apk
+
+      # =========================================================
+      # UPLOAD AAB
+      # =========================================================
 
       - name: Upload AAB
         uses: actions/upload-artifact@v4
