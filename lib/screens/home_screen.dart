@@ -4,12 +4,14 @@ import 'package:flutter/material.dart';
 import 'entries_screen.dart';
 import 'new_entry_screen.dart';
 import 'payment_screen.dart';
+import 'reports_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
 
   @override
-  State<HomeScreen> createState() => _HomeScreenState();
+  State<HomeScreen> createState() =>
+      _HomeScreenState();
 }
 
 class _HomeScreenState extends State<HomeScreen> {
@@ -25,13 +27,16 @@ class _HomeScreenState extends State<HomeScreen> {
     'Reports',
   ];
 
-  Stream<QuerySnapshot<Map<String, dynamic>>> _entriesStream() {
+  Stream<QuerySnapshot<Map<String, dynamic>>>
+      _entriesStream() {
     return _firestore
         .collection('mill_entries')
         .snapshots();
   }
 
-  bool _isDeleted(Map<String, dynamic> data) {
+  bool _isDeleted(
+    Map<String, dynamic> data,
+  ) {
     return data['isDeleted'] == true;
   }
 
@@ -46,7 +51,9 @@ class _HomeScreenState extends State<HomeScreen> {
         0;
   }
 
-  DateTime? _entryDate(Map<String, dynamic> data) {
+  DateTime? _entryDate(
+    Map<String, dynamic> data,
+  ) {
     final value = data['entryDateTime'];
 
     if (value is Timestamp) {
@@ -75,13 +82,15 @@ class _HomeScreenState extends State<HomeScreen> {
       appBar: _selectedIndex == 0
           ? AppBar(
               title: const Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
+                crossAxisAlignment:
+                    CrossAxisAlignment.start,
                 children: [
                   Text(
                     'Daily Update',
                     style: TextStyle(
                       fontSize: 22,
-                      fontWeight: FontWeight.w700,
+                      fontWeight:
+                          FontWeight.w700,
                     ),
                   ),
                   Text(
@@ -98,7 +107,8 @@ class _HomeScreenState extends State<HomeScreen> {
               title: Text(
                 _titles[_selectedIndex],
                 style: const TextStyle(
-                  fontWeight: FontWeight.w700,
+                  fontWeight:
+                      FontWeight.w700,
                 ),
               ),
             ),
@@ -106,7 +116,8 @@ class _HomeScreenState extends State<HomeScreen> {
         index: _selectedIndex,
         children: pages,
       ),
-      bottomNavigationBar: NavigationBar(
+      bottomNavigationBar:
+          NavigationBar(
         selectedIndex: _selectedIndex,
         onDestinationSelected: (index) {
           setState(() {
@@ -115,26 +126,36 @@ class _HomeScreenState extends State<HomeScreen> {
         },
         destinations: const [
           NavigationDestination(
-            icon: Icon(Icons.home_outlined),
-            selectedIcon: Icon(Icons.home_rounded),
+            icon: Icon(
+              Icons.home_outlined,
+            ),
+            selectedIcon: Icon(
+              Icons.home_rounded,
+            ),
             label: 'Home',
           ),
           NavigationDestination(
-            icon: Icon(Icons.receipt_long_outlined),
+            icon: Icon(
+              Icons.receipt_long_outlined,
+            ),
             selectedIcon: Icon(
               Icons.receipt_long_rounded,
             ),
             label: 'Entries',
           ),
           NavigationDestination(
-            icon: Icon(Icons.payments_outlined),
+            icon: Icon(
+              Icons.payments_outlined,
+            ),
             selectedIcon: Icon(
               Icons.payments_rounded,
             ),
             label: 'Payment',
           ),
           NavigationDestination(
-            icon: Icon(Icons.bar_chart_outlined),
+            icon: Icon(
+              Icons.bar_chart_outlined,
+            ),
             selectedIcon: Icon(
               Icons.bar_chart_rounded,
             ),
@@ -150,16 +171,19 @@ class _HomeScreenState extends State<HomeScreen> {
   // ============================================================
 
   Widget _homePage() {
-    return StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
+    return StreamBuilder<
+        QuerySnapshot<Map<String, dynamic>>>(
       stream: _entriesStream(),
       builder: (context, snapshot) {
         if (snapshot.hasError) {
           return Center(
             child: Padding(
-              padding: const EdgeInsets.all(24),
+              padding:
+                  const EdgeInsets.all(24),
               child: Text(
                 'Firebase error:\n${snapshot.error}',
-                textAlign: TextAlign.center,
+                textAlign:
+                    TextAlign.center,
               ),
             ),
           );
@@ -168,25 +192,28 @@ class _HomeScreenState extends State<HomeScreen> {
         if (snapshot.connectionState ==
             ConnectionState.waiting) {
           return const Center(
-            child: CircularProgressIndicator(),
+            child:
+                CircularProgressIndicator(),
           );
         }
 
         final documents =
-            snapshot.data?.docs.toList() ?? [];
+            snapshot.data?.docs.toList() ??
+                [];
 
-        final activeEntries = documents
-            .where(
-              (doc) => !_isDeleted(doc.data()),
-            )
-            .toList();
+        final activeEntries =
+            documents.where(
+          (doc) =>
+              !_isDeleted(doc.data()),
+        ).toList();
 
         double totalKg = 0;
         double sales = 0;
         double paid = 0;
         double udhaar = 0;
 
-        for (final doc in activeEntries) {
+        for (final doc
+            in activeEntries) {
           final data = doc.data();
 
           totalKg += _numberValue(
@@ -207,10 +234,13 @@ class _HomeScreenState extends State<HomeScreen> {
         }
 
         activeEntries.sort((a, b) {
-          final dateA = _entryDate(a.data());
-          final dateB = _entryDate(b.data());
+          final dateA =
+              _entryDate(a.data());
+          final dateB =
+              _entryDate(b.data());
 
-          if (dateA == null && dateB == null) {
+          if (dateA == null &&
+              dateB == null) {
             return 0;
           }
 
@@ -229,84 +259,123 @@ class _HomeScreenState extends State<HomeScreen> {
           child: RefreshIndicator(
             onRefresh: () async {
               await Future.delayed(
-                const Duration(milliseconds: 300),
+                const Duration(
+                  milliseconds: 300,
+                ),
               );
             },
-            child: SingleChildScrollView(
+            child:
+                SingleChildScrollView(
               physics:
                   const AlwaysScrollableScrollPhysics(),
-              padding: const EdgeInsets.all(16),
+              padding:
+                  const EdgeInsets.all(16),
               child: Column(
                 crossAxisAlignment:
-                    CrossAxisAlignment.start,
+                    CrossAxisAlignment
+                        .start,
                 children: [
-                  // Welcome Card
                   Container(
-                    width: double.infinity,
-                    padding: const EdgeInsets.all(20),
-                    decoration: BoxDecoration(
+                    width:
+                        double.infinity,
+                    padding:
+                        const EdgeInsets.all(
+                      20,
+                    ),
+                    decoration:
+                        BoxDecoration(
                       borderRadius:
-                          BorderRadius.circular(22),
+                          BorderRadius
+                              .circular(
+                        22,
+                      ),
                       gradient:
                           const LinearGradient(
                         colors: [
-                          Color(0xFF176B52),
-                          Color(0xFF0E4D3B),
+                          Color(
+                            0xFF176B52,
+                          ),
+                          Color(
+                            0xFF0E4D3B,
+                          ),
                         ],
                       ),
                     ),
-                    child: const Column(
+                    child:
+                        const Column(
                       crossAxisAlignment:
-                          CrossAxisAlignment.start,
+                          CrossAxisAlignment
+                              .start,
                       children: [
                         Text(
                           'Good Day 👋',
-                          style: TextStyle(
-                            color: Colors.white70,
-                            fontSize: 14,
+                          style:
+                              TextStyle(
+                            color:
+                                Colors.white70,
+                            fontSize:
+                                14,
                           ),
                         ),
-                        SizedBox(height: 6),
+                        SizedBox(
+                          height: 6,
+                        ),
                         Text(
                           'Manage your mill easily.',
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontSize: 21,
+                          style:
+                              TextStyle(
+                            color:
+                                Colors.white,
+                            fontSize:
+                                21,
                             fontWeight:
-                                FontWeight.bold,
+                                FontWeight
+                                    .bold,
                           ),
                         ),
                       ],
                     ),
                   ),
 
-                  const SizedBox(height: 24),
+                  const SizedBox(
+                    height: 24,
+                  ),
 
                   const Text(
                     "Today's Overview",
-                    style: TextStyle(
+                    style:
+                        TextStyle(
                       fontSize: 18,
-                      fontWeight: FontWeight.bold,
+                      fontWeight:
+                          FontWeight.bold,
                     ),
                   ),
 
-                  const SizedBox(height: 12),
+                  const SizedBox(
+                    height: 12,
+                  ),
 
                   Row(
                     children: [
                       Expanded(
-                        child: _summaryCard(
-                          title: 'Total KG',
+                        child:
+                            _summaryCard(
+                          title:
+                              'Total KG',
                           value:
                               '${totalKg.toStringAsFixed(2)} KG',
-                          icon:
-                              Icons.scale_rounded,
+                          icon: Icons
+                              .scale_rounded,
                         ),
                       ),
-                      const SizedBox(width: 12),
+                      const SizedBox(
+                        width: 12,
+                      ),
                       Expanded(
-                        child: _summaryCard(
-                          title: 'Sales',
+                        child:
+                            _summaryCard(
+                          title:
+                              'Sales',
                           value:
                               '₹${sales.toStringAsFixed(2)}',
                           icon: Icons
@@ -316,23 +385,31 @@ class _HomeScreenState extends State<HomeScreen> {
                     ],
                   ),
 
-                  const SizedBox(height: 12),
+                  const SizedBox(
+                    height: 12,
+                  ),
 
                   Row(
                     children: [
                       Expanded(
-                        child: _summaryCard(
-                          title: 'Paid',
+                        child:
+                            _summaryCard(
+                          title:
+                              'Paid',
                           value:
                               '₹${paid.toStringAsFixed(2)}',
-                          icon:
-                              Icons.payments_rounded,
+                          icon: Icons
+                              .payments_rounded,
                         ),
                       ),
-                      const SizedBox(width: 12),
+                      const SizedBox(
+                        width: 12,
+                      ),
                       Expanded(
-                        child: _summaryCard(
-                          title: 'Udhaar',
+                        child:
+                            _summaryCard(
+                          title:
+                              'Udhaar',
                           value:
                               '₹${udhaar.toStringAsFixed(2)}',
                           icon: Icons
@@ -342,39 +419,50 @@ class _HomeScreenState extends State<HomeScreen> {
                     ],
                   ),
 
-                  const SizedBox(height: 24),
+                  const SizedBox(
+                    height: 24,
+                  ),
 
-                  // New Entry
                   SizedBox(
-                    width: double.infinity,
+                    width:
+                        double.infinity,
                     height: 56,
-                    child: ElevatedButton.icon(
+                    child:
+                        ElevatedButton.icon(
                       onPressed: () async {
-                        await Navigator.push(
+                        await Navigator
+                            .push(
                           context,
                           MaterialPageRoute(
-                            builder: (context) =>
-                                const NewEntryScreen(),
+                            builder:
+                                (context) =>
+                                    const NewEntryScreen(),
                           ),
                         );
                       },
-                      icon: const Icon(
+                      icon:
+                          const Icon(
                         Icons.add_rounded,
                       ),
-                      label: const Text(
+                      label:
+                          const Text(
                         'New Mill Entry',
-                        style: TextStyle(
+                        style:
+                            TextStyle(
                           fontSize: 16,
                           fontWeight:
-                              FontWeight.bold,
+                              FontWeight
+                                  .bold,
                         ),
                       ),
                       style:
-                          ElevatedButton.styleFrom(
+                          ElevatedButton
+                              .styleFrom(
                         shape:
                             RoundedRectangleBorder(
                           borderRadius:
-                              BorderRadius.circular(
+                              BorderRadius
+                                  .circular(
                             16,
                           ),
                         ),
@@ -382,9 +470,10 @@ class _HomeScreenState extends State<HomeScreen> {
                     ),
                   ),
 
-                  const SizedBox(height: 28),
+                  const SizedBox(
+                    height: 28,
+                  ),
 
-                  // Recent Entries
                   Row(
                     mainAxisAlignment:
                         MainAxisAlignment
@@ -392,17 +481,21 @@ class _HomeScreenState extends State<HomeScreen> {
                     children: [
                       const Text(
                         'Recent Entries',
-                        style: TextStyle(
+                        style:
+                            TextStyle(
                           fontSize: 18,
                           fontWeight:
-                              FontWeight.bold,
+                              FontWeight
+                                  .bold,
                         ),
                       ),
-                      if (activeEntries.isNotEmpty)
+                      if (activeEntries
+                          .isNotEmpty)
                         TextButton(
                           onPressed: () {
                             setState(() {
-                              _selectedIndex = 1;
+                              _selectedIndex =
+                                  1;
                             });
                           },
                           child:
@@ -413,17 +506,21 @@ class _HomeScreenState extends State<HomeScreen> {
                     ],
                   ),
 
-                  const SizedBox(height: 10),
+                  const SizedBox(
+                    height: 10,
+                  ),
 
-                  if (activeEntries.isEmpty)
+                  if (activeEntries
+                      .isEmpty)
                     _emptyRecentEntries()
                   else
-                    ...activeEntries.take(5).map(
-                      (doc) {
-                        return _recentEntryCard(
-                          doc.data(),
-                        );
-                      },
+                    ...activeEntries
+                        .take(5)
+                        .map(
+                      (doc) =>
+                          _recentEntryCard(
+                        doc.data(),
+                      ),
                     ),
                 ],
               ),
@@ -447,40 +544,7 @@ class _HomeScreenState extends State<HomeScreen> {
   // ============================================================
 
   Widget _reportsPage() {
-    return const SafeArea(
-      child: Center(
-        child: Padding(
-          padding: EdgeInsets.all(24),
-          child: Column(
-            mainAxisAlignment:
-                MainAxisAlignment.center,
-            children: [
-              Icon(
-                Icons.bar_chart_rounded,
-                size: 64,
-                color: Color(0xFF176B52),
-              ),
-              SizedBox(height: 16),
-              Text(
-                'Reports',
-                style: TextStyle(
-                  fontSize: 21,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-              SizedBox(height: 8),
-              Text(
-                'Daily, weekly aur monthly mill reports yahan milengi.',
-                textAlign: TextAlign.center,
-                style: TextStyle(
-                  color: Colors.grey,
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
+    return const ReportsScreen();
   }
 
   // ============================================================
@@ -491,11 +555,14 @@ class _HomeScreenState extends State<HomeScreen> {
     Map<String, dynamic> data,
   ) {
     final customer =
-        data['customerName']?.toString() ??
+        data['customerName']
+                ?.toString() ??
             'Unknown';
 
     final product =
-        data['product']?.toString() ?? '';
+        data['product']
+                ?.toString() ??
+            '';
 
     final kg = _numberValue(
       data['quantityKg'],
@@ -511,34 +578,47 @@ class _HomeScreenState extends State<HomeScreen> {
 
     return Card(
       margin:
-          const EdgeInsets.only(bottom: 10),
+          const EdgeInsets.only(
+        bottom: 10,
+      ),
       elevation: 0,
       shape:
           RoundedRectangleBorder(
         borderRadius:
-            BorderRadius.circular(16),
-        side: const BorderSide(
-          color: Color(0xFFE5E7EB),
+            BorderRadius.circular(
+          16,
+        ),
+        side:
+            const BorderSide(
+          color:
+              Color(0xFFE5E7EB),
         ),
       ),
-      child: Padding(
+      child:
+          Padding(
         padding:
             const EdgeInsets.all(14),
-        child: Row(
+        child:
+            Row(
           children: [
             CircleAvatar(
-              child: Text(
+              child:
+                  Text(
                 customer.isEmpty
                     ? '?'
                     : customer[0]
                         .toUpperCase(),
               ),
             ),
-            const SizedBox(width: 12),
+            const SizedBox(
+              width: 12,
+            ),
             Expanded(
-              child: Column(
+              child:
+                  Column(
                 crossAxisAlignment:
-                    CrossAxisAlignment.start,
+                    CrossAxisAlignment
+                        .start,
                 children: [
                   Text(
                     customer,
@@ -546,15 +626,19 @@ class _HomeScreenState extends State<HomeScreen> {
                         const TextStyle(
                       fontSize: 15,
                       fontWeight:
-                          FontWeight.w700,
+                          FontWeight
+                              .w700,
                     ),
                   ),
-                  const SizedBox(height: 3),
+                  const SizedBox(
+                    height: 3,
+                  ),
                   Text(
                     '$product • ${kg.toStringAsFixed(2)} KG',
                     style:
                         const TextStyle(
-                      color: Colors.grey,
+                      color:
+                          Colors.grey,
                       fontSize: 12,
                     ),
                   ),
@@ -563,22 +647,27 @@ class _HomeScreenState extends State<HomeScreen> {
             ),
             Column(
               crossAxisAlignment:
-                  CrossAxisAlignment.end,
+                  CrossAxisAlignment
+                      .end,
               children: [
                 Text(
                   '₹${total.toStringAsFixed(2)}',
                   style:
                       const TextStyle(
                     fontWeight:
-                        FontWeight.w800,
+                        FontWeight
+                            .w800,
                   ),
                 ),
-                const SizedBox(height: 3),
+                const SizedBox(
+                  height: 3,
+                ),
                 Text(
                   'Paid ₹${paid.toStringAsFixed(2)}',
                   style:
                       const TextStyle(
-                    color: Colors.grey,
+                    color:
+                        Colors.grey,
                     fontSize: 11,
                   ),
                 ),
@@ -591,49 +680,64 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   // ============================================================
-  // EMPTY
+  // EMPTY STATE
   // ============================================================
 
   Widget _emptyRecentEntries() {
     return Container(
-      width: double.infinity,
+      width:
+          double.infinity,
       padding:
           const EdgeInsets.all(28),
       decoration:
           BoxDecoration(
-        color: Colors.white,
+        color:
+            Colors.white,
         borderRadius:
-            BorderRadius.circular(18),
-        border: Border.all(
-          color: const Color(
+            BorderRadius.circular(
+          18,
+        ),
+        border:
+            Border.all(
+          color:
+              const Color(
             0xFFE5E7EB,
           ),
         ),
       ),
-      child: const Column(
+      child:
+          const Column(
         children: [
           Icon(
             Icons
                 .receipt_long_outlined,
             size: 42,
-            color: Colors.grey,
+            color:
+                Colors.grey,
           ),
-          SizedBox(height: 12),
+          SizedBox(
+            height: 12,
+          ),
           Text(
             'No entries yet',
-            style: TextStyle(
+            style:
+                TextStyle(
               fontSize: 16,
               fontWeight:
                   FontWeight.bold,
             ),
           ),
-          SizedBox(height: 5),
+          SizedBox(
+            height: 5,
+          ),
           Text(
             'Add your first mill entry to get started.',
             textAlign:
                 TextAlign.center,
-            style: TextStyle(
-              color: Colors.grey,
+            style:
+                TextStyle(
+              color:
+                  Colors.grey,
               fontSize: 13,
             ),
           ),
@@ -656,34 +760,48 @@ class _HomeScreenState extends State<HomeScreen> {
           const EdgeInsets.all(16),
       decoration:
           BoxDecoration(
-        color: Colors.white,
+        color:
+            Colors.white,
         borderRadius:
-            BorderRadius.circular(18),
-        border: Border.all(
-          color: const Color(
+            BorderRadius.circular(
+          18,
+        ),
+        border:
+            Border.all(
+          color:
+              const Color(
             0xFFE5E7EB,
           ),
         ),
       ),
-      child: Column(
+      child:
+          Column(
         crossAxisAlignment:
-            CrossAxisAlignment.start,
+            CrossAxisAlignment
+                .start,
         children: [
           Icon(icon),
-          const SizedBox(height: 12),
+          const SizedBox(
+            height: 12,
+          ),
           Text(
             value,
-            style: const TextStyle(
+            style:
+                const TextStyle(
               fontSize: 20,
               fontWeight:
                   FontWeight.bold,
             ),
           ),
-          const SizedBox(height: 4),
+          const SizedBox(
+            height: 4,
+          ),
           Text(
             title,
-            style: const TextStyle(
-              color: Colors.grey,
+            style:
+                const TextStyle(
+              color:
+                  Colors.grey,
               fontSize: 13,
             ),
           ),
