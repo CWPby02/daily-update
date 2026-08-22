@@ -5,16 +5,26 @@ class NewEntryScreen extends StatefulWidget {
   const NewEntryScreen({super.key});
 
   @override
-  State<NewEntryScreen> createState() => _NewEntryScreenState();
+  State<NewEntryScreen> createState() =>
+      _NewEntryScreenState();
 }
 
-class _NewEntryScreenState extends State<NewEntryScreen> {
-  final _formKey = GlobalKey<FormState>();
+class _NewEntryScreenState
+    extends State<NewEntryScreen> {
+  final _formKey =
+      GlobalKey<FormState>();
 
-  final _customerController = TextEditingController();
-  final _kgController = TextEditingController();
-  final _paidController = TextEditingController();
-  final _udhaarController = TextEditingController();
+  final _customerController =
+      TextEditingController();
+
+  final _kgController =
+      TextEditingController();
+
+  final _paidController =
+      TextEditingController();
+
+  final _udhaarController =
+      TextEditingController();
 
   final FirebaseFirestore _firestore =
       FirebaseFirestore.instance;
@@ -25,7 +35,8 @@ class _NewEntryScreenState extends State<NewEntryScreen> {
   bool _udhaarTaken = false;
   bool _isSaving = false;
 
-  DateTime _selectedDateTime = DateTime.now();
+  DateTime _selectedDateTime =
+      DateTime.now();
 
   final Map<String, double> _prices = {
     'Aata': 2.0,
@@ -34,22 +45,35 @@ class _NewEntryScreenState extends State<NewEntryScreen> {
   };
 
   double get _totalAmount {
-    final kg = double.tryParse(_kgController.text) ?? 0;
-    final price = _prices[_selectedProduct] ?? 0;
+    final kg =
+        double.tryParse(
+              _kgController.text,
+            ) ??
+            0;
+
+    final price =
+        _prices[_selectedProduct] ?? 0;
 
     return kg * price;
   }
 
   double get _paidAmount {
-    return double.tryParse(_paidController.text) ?? 0;
+    return double.tryParse(
+          _paidController.text,
+        ) ??
+        0;
   }
 
   double get _udhaarAmount {
-    return double.tryParse(_udhaarController.text) ?? 0;
+    return double.tryParse(
+          _udhaarController.text,
+        ) ??
+        0;
   }
 
   double get _remainingAmount {
-    final value = _totalAmount - _paidAmount;
+    final value =
+        _totalAmount - _paidAmount;
 
     return value < 0 ? 0 : value;
   }
@@ -80,20 +104,26 @@ class _NewEntryScreenState extends State<NewEntryScreen> {
   }
 
   Future<void> _selectDateTime() async {
-    final date = await showDatePicker(
+    final date =
+        await showDatePicker(
       context: context,
-      initialDate: _selectedDateTime,
-      firstDate: DateTime(2020),
-      lastDate: DateTime(2100),
+      initialDate:
+          _selectedDateTime,
+      firstDate:
+          DateTime(2020),
+      lastDate:
+          DateTime(2100),
     );
 
     if (date == null || !mounted) {
       return;
     }
 
-    final time = await showTimePicker(
+    final time =
+        await showTimePicker(
       context: context,
-      initialTime: TimeOfDay.fromDateTime(
+      initialTime:
+          TimeOfDay.fromDateTime(
         _selectedDateTime,
       ),
     );
@@ -103,7 +133,8 @@ class _NewEntryScreenState extends State<NewEntryScreen> {
     }
 
     setState(() {
-      _selectedDateTime = DateTime(
+      _selectedDateTime =
+          DateTime(
         date.year,
         date.month,
         date.day,
@@ -114,17 +145,24 @@ class _NewEntryScreenState extends State<NewEntryScreen> {
   }
 
   Future<void> _saveEntry() async {
-    if (!_formKey.currentState!.validate()) {
+    if (!_formKey.currentState!
+        .validate()) {
       return;
     }
 
-    if (_paymentReceived && _paidAmount <= 0) {
-      _showMessage('Paid amount enter karo.');
+    if (_paymentReceived &&
+        _paidAmount <= 0) {
+      _showMessage(
+        'Paid amount enter karo.',
+      );
       return;
     }
 
-    if (_udhaarTaken && _udhaarAmount <= 0) {
-      _showMessage('Udhaar amount enter karo.');
+    if (_udhaarTaken &&
+        _udhaarAmount <= 0) {
+      _showMessage(
+        'Udhaar amount enter karo.',
+      );
       return;
     }
 
@@ -137,53 +175,86 @@ class _NewEntryScreenState extends State<NewEntryScreen> {
     });
 
     try {
-      final kg = double.parse(
+      final kg =
+          double.parse(
         _kgController.text.trim(),
       );
 
       final pricePerKg =
           _prices[_selectedProduct]!;
 
-      final totalAmount = kg * pricePerKg;
+      final totalAmount =
+          kg * pricePerKg;
 
       final paidAmount =
-          _paymentReceived ? _paidAmount : 0.0;
+          _paymentReceived
+              ? _paidAmount
+              : 0.0;
 
       final udhaarAmount =
-          _udhaarTaken ? _udhaarAmount : 0.0;
+          _udhaarTaken
+              ? _udhaarAmount
+              : 0.0;
 
+      // Firebase mein new entry save
       await _firestore
           .collection('mill_entries')
           .add({
+        // Customer
         'customerName':
-            _customerController.text.trim(),
+            _customerController
+                .text
+                .trim(),
 
-        'product': _selectedProduct,
+        // Mill details
+        'product':
+            _selectedProduct,
 
-        'quantityKg': kg,
+        'quantityKg':
+            kg,
 
-        'pricePerKg': pricePerKg,
+        'pricePerKg':
+            pricePerKg,
 
-        'totalAmount': totalAmount,
+        'totalAmount':
+            totalAmount,
 
+        // Payment
         'paymentReceived':
             _paymentReceived,
 
-        'paidAmount': paidAmount,
+        'paidAmount':
+            paidAmount,
 
+        // Udhaar
         'udhaarTaken':
             _udhaarTaken,
 
         'udhaarAmount':
             udhaarAmount,
 
+        // Selected entry date/time
         'entryDateTime':
             Timestamp.fromDate(
           _selectedDateTime,
         ),
 
+        // System created time
         'createdAt':
             FieldValue.serverTimestamp(),
+
+        // System updated time
+        'updatedAt':
+            FieldValue.serverTimestamp(),
+
+        // IMPORTANT:
+        // New entry deleted nahi hai.
+        'isDeleted':
+            false,
+
+        // Abhi delete nahi hua.
+        'deletedAt':
+            null,
       });
 
       if (!mounted) {
@@ -194,17 +265,21 @@ class _NewEntryScreenState extends State<NewEntryScreen> {
         'Entry Firebase mein save ho gayi ✅',
       );
 
+      // Form clear
       _customerController.clear();
       _kgController.clear();
       _paidController.clear();
       _udhaarController.clear();
 
       setState(() {
-        _selectedProduct = 'Aata';
+        _selectedProduct =
+            'Aata';
 
-        _paymentReceived = false;
+        _paymentReceived =
+            false;
 
-        _udhaarTaken = false;
+        _udhaarTaken =
+            false;
 
         _selectedDateTime =
             DateTime.now();
@@ -215,7 +290,8 @@ class _NewEntryScreenState extends State<NewEntryScreen> {
       }
 
       _showMessage(
-        'Firebase error: ${e.message ?? e.code}',
+        'Firebase error: '
+        '${e.message ?? e.code}',
       );
     } catch (e) {
       if (!mounted) {
@@ -223,7 +299,8 @@ class _NewEntryScreenState extends State<NewEntryScreen> {
       }
 
       _showMessage(
-        'Entry save nahi hui. Dobara try karo.',
+        'Entry save nahi hui. '
+        'Dobara try karo.',
       );
     } finally {
       if (mounted) {
@@ -234,10 +311,14 @@ class _NewEntryScreenState extends State<NewEntryScreen> {
     }
   }
 
-  void _showMessage(String message) {
-    ScaffoldMessenger.of(context).showSnackBar(
+  void _showMessage(
+    String message,
+  ) {
+    ScaffoldMessenger.of(context)
+        .showSnackBar(
       SnackBar(
-        content: Text(message),
+        content:
+            Text(message),
         behavior:
             SnackBarBehavior.floating,
       ),
@@ -257,13 +338,15 @@ class _NewEntryScreenState extends State<NewEntryScreen> {
             .toString()
             .padLeft(2, '0');
 
-    final year = dateTime.year;
+    final year =
+        dateTime.year;
 
-    final hour = dateTime.hour == 0
-        ? 12
-        : dateTime.hour > 12
-            ? dateTime.hour - 12
-            : dateTime.hour;
+    final hour =
+        dateTime.hour == 0
+            ? 12
+            : dateTime.hour > 12
+                ? dateTime.hour - 12
+                : dateTime.hour;
 
     final minute =
         dateTime.minute
@@ -280,8 +363,11 @@ class _NewEntryScreenState extends State<NewEntryScreen> {
   }
 
   @override
-  Widget build(BuildContext context) {
-    final total = _totalAmount;
+  Widget build(
+    BuildContext context,
+  ) {
+    final total =
+        _totalAmount;
 
     final remaining =
         _remainingAmount;
@@ -312,12 +398,15 @@ class _NewEntryScreenState extends State<NewEntryScreen> {
               'Grahak ki basic information',
             ),
 
-            const SizedBox(height: 12),
+            const SizedBox(
+              height: 12,
+            ),
 
             _textField(
               controller:
                   _customerController,
-              label: 'Grahak Name',
+              label:
+                  'Grahak Name',
               hint:
                   'Example: Ramesh Kumar',
               icon:
@@ -332,21 +421,26 @@ class _NewEntryScreenState extends State<NewEntryScreen> {
               },
             ),
 
-            const SizedBox(height: 24),
+            const SizedBox(
+              height: 24,
+            ),
 
             _sectionTitle(
               'Mill Details',
               'Product aur quantity select karo',
             ),
 
-            const SizedBox(height: 12),
+            const SizedBox(
+              height: 12,
+            ),
 
             DropdownButtonFormField<String>(
               initialValue:
                   _selectedProduct,
               decoration:
                   InputDecoration(
-                labelText: 'Product',
+                labelText:
+                    'Product',
                 prefixIcon:
                     const Icon(
                   Icons.category_outlined,
@@ -354,7 +448,8 @@ class _NewEntryScreenState extends State<NewEntryScreen> {
                 border:
                     OutlineInputBorder(
                   borderRadius:
-                      BorderRadius.circular(
+                      BorderRadius
+                          .circular(
                     16,
                   ),
                 ),
@@ -364,20 +459,25 @@ class _NewEntryScreenState extends State<NewEntryScreen> {
                       .map(
                 (product) {
                   final price =
-                      _prices[product]!;
+                      _prices[
+                          product]!;
 
                   return DropdownMenuItem<
                       String>(
-                    value: product,
-                    child: Text(
+                    value:
+                        product,
+                    child:
+                        Text(
                       '$product • '
                       '₹${price.toStringAsFixed(1)}/KG',
                     ),
                   );
                 },
               ).toList(),
-              onChanged: (value) {
-                if (value == null) {
+              onChanged:
+                  (value) {
+                if (value ==
+                    null) {
                   return;
                 }
 
@@ -388,7 +488,9 @@ class _NewEntryScreenState extends State<NewEntryScreen> {
               },
             ),
 
-            const SizedBox(height: 14),
+            const SizedBox(
+              height: 14,
+            ),
 
             _textField(
               controller:
@@ -402,9 +504,11 @@ class _NewEntryScreenState extends State<NewEntryScreen> {
               keyboardType:
                   const TextInputType
                       .numberWithOptions(
-                decimal: true,
+                decimal:
+                    true,
               ),
-              validator: (value) {
+              validator:
+                  (value) {
                 final kg =
                     double.tryParse(
                   value ?? '',
@@ -419,32 +523,41 @@ class _NewEntryScreenState extends State<NewEntryScreen> {
               },
             ),
 
-            const SizedBox(height: 18),
+            const SizedBox(
+              height: 18,
+            ),
 
             _amountCard(
               title:
                   'Total Amount',
-              amount: total,
+              amount:
+                  total,
               subtitle:
                   '${_kgController.text.isEmpty ? '0' : _kgController.text} KG × '
                   '₹${_prices[_selectedProduct]!.toStringAsFixed(1)}',
             ),
 
-            const SizedBox(height: 24),
+            const SizedBox(
+              height: 24,
+            ),
 
             _sectionTitle(
               'Payment',
               'Payment received hai ya nahi',
             ),
 
-            const SizedBox(height: 10),
+            const SizedBox(
+              height: 10,
+            ),
 
             SwitchListTile(
               contentPadding:
                   EdgeInsets.zero,
-              title: const Text(
+              title:
+                  const Text(
                 'Payment Received',
-                style: TextStyle(
+                style:
+                    TextStyle(
                   fontWeight:
                       FontWeight.w600,
                 ),
@@ -455,7 +568,8 @@ class _NewEntryScreenState extends State<NewEntryScreen> {
               ),
               value:
                   _paymentReceived,
-              onChanged: (value) {
+              onChanged:
+                  (value) {
                 setState(() {
                   _paymentReceived =
                       value;
@@ -464,8 +578,9 @@ class _NewEntryScreenState extends State<NewEntryScreen> {
             ),
 
             if (_paymentReceived) ...[
-              const SizedBox(height: 8),
-
+              const SizedBox(
+                height: 8,
+              ),
               _textField(
                 controller:
                     _paidController,
@@ -474,23 +589,29 @@ class _NewEntryScreenState extends State<NewEntryScreen> {
                 hint:
                     'Example: 100',
                 icon:
-                    Icons.currency_rupee_rounded,
+                    Icons
+                        .currency_rupee_rounded,
                 keyboardType:
                     const TextInputType
                         .numberWithOptions(
-                  decimal: true,
+                  decimal:
+                      true,
                 ),
               ),
             ],
 
-            const SizedBox(height: 12),
+            const SizedBox(
+              height: 12,
+            ),
 
             SwitchListTile(
               contentPadding:
                   EdgeInsets.zero,
-              title: const Text(
+              title:
+                  const Text(
                 'Udhaar',
-                style: TextStyle(
+                style:
+                    TextStyle(
                   fontWeight:
                       FontWeight.w600,
                 ),
@@ -501,7 +622,8 @@ class _NewEntryScreenState extends State<NewEntryScreen> {
               ),
               value:
                   _udhaarTaken,
-              onChanged: (value) {
+              onChanged:
+                  (value) {
                 setState(() {
                   _udhaarTaken =
                       value;
@@ -510,8 +632,9 @@ class _NewEntryScreenState extends State<NewEntryScreen> {
             ),
 
             if (_udhaarTaken) ...[
-              const SizedBox(height: 8),
-
+              const SizedBox(
+                height: 8,
+              ),
               _textField(
                 controller:
                     _udhaarController,
@@ -525,12 +648,15 @@ class _NewEntryScreenState extends State<NewEntryScreen> {
                 keyboardType:
                     const TextInputType
                         .numberWithOptions(
-                  decimal: true,
+                  decimal:
+                      true,
                 ),
               ),
             ],
 
-            const SizedBox(height: 18),
+            const SizedBox(
+              height: 18,
+            ),
 
             if (total > 0)
               _amountCard(
@@ -542,14 +668,18 @@ class _NewEntryScreenState extends State<NewEntryScreen> {
                     'Total amount - Paid amount',
               ),
 
-            const SizedBox(height: 24),
+            const SizedBox(
+              height: 24,
+            ),
 
             _sectionTitle(
               'Date & Time',
               'Entry ka date aur time',
             ),
 
-            const SizedBox(height: 12),
+            const SizedBox(
+              height: 12,
+            ),
 
             InkWell(
               borderRadius:
@@ -635,7 +765,9 @@ class _NewEntryScreenState extends State<NewEntryScreen> {
               ),
             ),
 
-            const SizedBox(height: 28),
+            const SizedBox(
+              height: 28,
+            ),
 
             SizedBox(
               height: 56,
@@ -671,7 +803,8 @@ class _NewEntryScreenState extends State<NewEntryScreen> {
                   ),
                 ),
                 style:
-                    ElevatedButton.styleFrom(
+                    ElevatedButton
+                        .styleFrom(
                   shape:
                       RoundedRectangleBorder(
                     borderRadius:
@@ -705,14 +838,15 @@ class _NewEntryScreenState extends State<NewEntryScreen> {
                 FontWeight.w800,
           ),
         ),
-
-        const SizedBox(height: 3),
-
+        const SizedBox(
+          height: 3,
+        ),
         Text(
           subtitle,
           style:
               const TextStyle(
-            color: Colors.grey,
+            color:
+                Colors.grey,
             fontSize: 13,
           ),
         ),
@@ -731,13 +865,18 @@ class _NewEntryScreenState extends State<NewEntryScreen> {
         validator,
   }) {
     return TextFormField(
-      controller: controller,
-      keyboardType: keyboardType,
-      validator: validator,
+      controller:
+          controller,
+      keyboardType:
+          keyboardType,
+      validator:
+          validator,
       decoration:
           InputDecoration(
-        labelText: label,
-        hintText: hint,
+        labelText:
+            label,
+        hintText:
+            hint,
         prefixIcon:
             Icon(icon),
         border:
@@ -758,11 +897,15 @@ class _NewEntryScreenState extends State<NewEntryScreen> {
   }) {
     return Container(
       padding:
-          const EdgeInsets.all(18),
+          const EdgeInsets.all(
+        18,
+      ),
       decoration:
           BoxDecoration(
         color:
-            const Color(0xFFEFF8F4),
+            const Color(
+          0xFFEFF8F4,
+        ),
         borderRadius:
             BorderRadius.circular(
           18,
@@ -770,7 +913,9 @@ class _NewEntryScreenState extends State<NewEntryScreen> {
         border:
             Border.all(
           color:
-              const Color(0xFFD2EADF),
+              const Color(
+            0xFFD2EADF,
+          ),
         ),
       ),
       child: Row(
@@ -783,7 +928,9 @@ class _NewEntryScreenState extends State<NewEntryScreen> {
             ),
           ),
 
-          const SizedBox(width: 14),
+          const SizedBox(
+            width: 14,
+          ),
 
           Expanded(
             child:
